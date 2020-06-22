@@ -102,6 +102,18 @@ DOCUMENTATION = """
               pywinrm.
         vars:
           - name: ansible_winrm_connection_timeout
+
+      command_loops:
+        description:
+            - Sets the number of loops with timeouts to wait for a command reply.
+            - Corresponds to the C(command_loops) in pywinrm.
+            - The default value is the pywinrm default of 0, meaning loop 
+              forever to maintain compatibility with exiting scripts.
+              If a windows script gets locked due to a file lock or registry error
+              the script will, by default, loop forever.
+        vars:
+          - name: ansible_winrm_connection_timeout
+
         type: int
 """
 
@@ -228,6 +240,7 @@ class Connection(ConnectionBase):
         self._kinit_cmd = self.get_option('kerberos_command')
         self._winrm_transport = self.get_option('transport')
         self._winrm_connection_timeout = self.get_option('connection_timeout')
+        self._winrm_command_loops = self.get_option('command_loops')
 
         if hasattr(winrm, 'FEATURE_SUPPORTED_AUTHTYPES'):
             self._winrm_supported_authtypes = set(winrm.FEATURE_SUPPORTED_AUTHTYPES)
@@ -401,6 +414,7 @@ class Connection(ConnectionBase):
                 if self._winrm_connection_timeout:
                     winrm_kwargs['operation_timeout_sec'] = self._winrm_connection_timeout
                     winrm_kwargs['read_timeout_sec'] = self._winrm_connection_timeout + 1
+                    winrm_kwargs['command_loops'] = self._winrm_command_loops
                 protocol = Protocol(endpoint, transport=transport, **winrm_kwargs)
 
                 # open the shell from connect so we know we're able to talk to the server
